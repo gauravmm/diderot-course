@@ -1,11 +1,11 @@
 # Simple Diderot Project
 
-This is a simple projectg scaffold for TAs hoping to use Diderot effectively. You need a modern version of Linux (Ubuntu/Windows Subsystem for Linux/Vagrant suggested), or possibly Mac OSX to use this.
+This is a simple project scaffold for TAs hoping to use Diderot effectively. You need a modern version of Linux (Ubuntu/Windows Subsystem for Linux/Vagrant suggested), or possibly Mac OSX to use this.
 
 In this course management repository, IPython notebooks are the preferred format for course hand-outs, hand-ins, and notes. I strongly recommend you use notebooks with this -- we provide these features:
 
 - **Automatic handout packaging.**: you write a single handout including prose, empty function stubs, student-side tests, and reference implementations. From that, we:
-  - Configure the handin autograder to only allow package imports for the Python standard library and everything in `requirements.txt`.
+  - Configure the autograder to only allow package imports for the Python standard library and everything in `requirements.txt` (on a per-handin basis).
   - Test your autograder and reference implementation to make sure they agree.
   - Provide students with the testing framework to check their handouts before submission. (This greatly reduces submission attempts.)
   - Package and upload the handout and autograder to Diderot Code Labs.
