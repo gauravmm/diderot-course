@@ -41,7 +41,7 @@ git submodule update --recursive --remote
 │       │   └── tests.py                 Autograder tests. Required, leave empty if not needed.
 │       ├── handout
 │       │   ├── requirements.txt         Required, leave empty if not needed.
-│       │   ├── <homework-id>.ipynb      The hand-in file.
+│       │   ├── <homework-id>_solution.ipynb      The hand-in file.
 │       │   └── other-files.ext          Any other files required.
 │       └── score.json                   Score breakdown for fully-correct homework. Used by `test-homework`.
 ├── notes

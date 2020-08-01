@@ -1,9 +1,9 @@
-[submodule "guide"]
+[submodule "tools/guide"]
 	path = tools/guide
 	url = https://github.com/diderot-edu/guide.git
-[submodule "nb2md"]
+[submodule "tools/nb2md"]
 	path = tools/nb2md
 	url = https://github.com/gauravmm/nb2md.git
-[submodule "diderot-cli"]
+[submodule "tools/diderot-cli"]
 	path = tools/diderot-cli
-	url = https://github.com/diderot-edu/diderot-cli.git
+	url = https://github.com/gauravmm/diderot-cli.git

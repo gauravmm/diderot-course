@@ -37,8 +37,7 @@ mkdir "$TMPDIR" 2>/dev/null || true
 # Commandline Options
 IGNORE_TIMES=false
 if [[ $1 == "help" ]]; then
-    echo "build-homework [help] [--force] [lecture [lecture [...]]]"
-    echo "Run without arguments to build all Diderot homeworks and autograders."
+    echo "build-homework [help] [--force] homework [homework [...]]"
     echo "use --force to ignore timestamps. (Currently timestamp checking is not implemented.)"
     exit
 elif [[ $1 == "--force" ]]; then
@@ -48,7 +47,7 @@ fi
 
 # Read list of lectures
 if [ $# == 0 ]; then
-    readarray HOMEWORKS < "./homeworks"
+    echo "NO HOMEWORK SPECIFIED"
 else
     HOMEWORKS=( "$@" )
 fi
