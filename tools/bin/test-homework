@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -e
+
+HOMEWORK="$1"
+DIR="$(pwd)/homework-diderot/$HOMEWORK"
+HANDIN="$DIR/$HOMEWORK.test-handin.tgz"
+
+tools/bin/build-homework $HOMEWORK
+
+if [ ! -z $2 ]; then
+    HANDIN="$2"
+else
+    ( cd "$DIR/test-handin/"; tar --transform "s|^|student-handin/|" -czv "${HOMEWORK}.ipynb" ) > "$HANDIN"
+fi
+
+# Build the docker image:
+( cd tools/autograder; docker build . --tag diderot-grader:runner )
+
+# Run the test handin:
+docker run \
+    -v $HANDIN:/app/handin.tgz \
+    -v $DIR/autograde.tar:/app/autograde.tar \
+    -v $DIR/autograde-Makefile:/app/Makefile \
+    diderot-grader:runner

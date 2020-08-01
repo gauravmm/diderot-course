@@ -60,6 +60,13 @@ git submodule update --recursive --remote
     └── solution2handout.py              Takes a homework master file and strips out the `##SOLUTION##` cells.
 ```
 
+### More External Dependencies
+
+In addition to the dependencies in `bin/tools`, we have these dependencies:
+
+- Client-side tests [https://github.com/gauravmm/jupyter-testing.git](`jupyter-testing`).
+- Server-side grader [https://github.com/gauravmm/autolab-testing.git](`autolab-testing`).
+
 ### Requirements
 
 Before you can run any of these scripts, ensure that you have:
@@ -99,6 +106,20 @@ Include the grader as a set of files in `/homework/<homework_id>/grading/*.py`. 
 
 On building notes and homework, web pages are automatically generated in "*-website/" directories. This is much cheaper than generating the main Diderot files, so consider leaving it enabled even if you don't need it.
 
+## Scripts
+
+All scripts must be run from the root directory of the repository. Run them as `tools/bin/<script-name>`.
+
+Here are the scripts:
+
+- `diderot`: stub to access diderot; modify to change default arguments.
+- `build-homework <homework-id> [<homework-id> ...]`: for each specified homework, build the handout, reference handin, autograder, diderot chapter, and web pages.
+- `build-notes <notes-id> [<notes-id> ...]`: for each specified notes, build the diderot chapter and web pages.
+- `test-homework <homework-id> [handin.tgz]`: run the autograder on the reference handin, printing the output. Requires that you have built the autograder image. You can optionally specify a student-submitted `handin.tgz` (exactly that name) to run that instead.
+- `upload-homework <homework-id>`: upload the built handout, autograder, and diderot book chapter. Then submit the reference handin.
+- `upload-notes <notes-id>`: upload the built diderot book chapter.
+- `upload-slides <slides-id>`: upload the slides as a diderot book chapter.
+
 ## Caveats
 
 - This builds based on your current directory structure, not on the clean commit. A simple strategy to avoid accidentally bundling side-loaded data is to:
@@ -107,3 +128,4 @@ On building notes and homework, web pages are automatically generated in "*-webs
   3. pulling these changes from your building repository,
   4. running the build and push process from there
 - The course name is currently hardcoded in every script in `tools/bin/upload-*`. This should be fixed.
+- Be careful when uploading book chapters. You can easily lose questions that students post.

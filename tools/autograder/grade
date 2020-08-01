@@ -1,0 +1,32 @@
+#!/bin/bash
+set -e
+
+NOTEBOOK=$(cat homework-name)
+
+TIMEOUT=60
+if [ -f "grader-timeout" ]; then
+    TIMEOUT="$(cat grader-timeout)"
+    echo "Timeout $TIMEOUT"
+fi
+
+# Grader requirements
+pip install -r grader-requirements.txt | grep -v 'already satisfied' || true
+# Individual task requirements
+pip install -r handout-requirements.txt | grep -v 'already satisfied' || true
+
+# Extract the handin
+mkdir handin
+tar -C handin -xvf handin.tgz
+
+if [ -d handin/student-handin ]; then
+    mv handin/student-handin/* handin/
+fi
+
+# Convert
+python3 -m jupyter nbconvert --to python ./handin/${NOTEBOOK}.ipynb
+
+ls -alh handin
+whoami
+
+# Grade
+DISABLE_TESTING=1 PYTHONIOENCODING=utf-8 ./timeout -t "$TIMEOUT" python3 -m autograder --code ./handin/${NOTEBOOK}.py --test tests/*

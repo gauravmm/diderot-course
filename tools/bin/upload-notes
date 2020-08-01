@@ -1,0 +1,5 @@
+#!/bin/bash
+
+CHAPTER="$1"
+
+tools/bin/diderot upload_chapter "15388:f19" book:lecture-notes --chapter_label "ch:::${CHAPTER}" --xml notes-diderot/${CHAPTER}/${CHAPTER}.xml --attach notes-diderot/${CHAPTER}/*

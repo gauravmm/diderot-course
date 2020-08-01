@@ -1,0 +1,2 @@
+jupyter
+-e git+https://github.com/gauravmm/autolab-testing.git#egg=autolab-testing

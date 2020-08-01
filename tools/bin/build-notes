@@ -1,0 +1,91 @@
+#!/bin/bash
+
+set -e
+
+# Set up paths
+UNAME_S="$(uname -s)"
+if [[ $UNAME_S == Linux* ]]; then
+    DC_PLATFORM="ubuntu"
+elif [[ $UNAME_S == Darwin* ]]; then
+    DC_PLATFORM="macos"
+fi
+DC_PATH="tools/guide/bin/$DC_PLATFORM/dc"
+NB2MD_PATH="tools/nb2md/nb2md.py"
+
+INDIR=notes
+OUTDIR=notes-diderot
+TMPDIR=notes-markdown
+WEBDIR=notes-website
+
+mkdir "$OUTDIR" 2>/dev/null || true
+mkdir "$TMPDIR" 2>/dev/null || true
+mkdir "$WEBDIR" 2>/dev/null || true
+
+# Commandline Options
+IGNORE_TIMES=false
+if [[ $1 == "help" ]]; then
+    echo "build-notes [--force] [help] [lecture [lecture [...]]]"
+    echo "Run without arguments to build Diderot XML notes from .ipynb files."
+    echo "use --force to ignore timestamps."
+    exit
+elif [[ $1 == "--force" ]]; then
+    IGNORE_TIMES=true
+    shift
+fi
+
+# Read list of lectures
+if [ $# == 0 ]; then
+    readarray LECTURES < "./lectures"
+else
+    LECTURES=( "$@" )
+fi
+
+# Loop over all lectures:
+for lecture in ${LECTURES[@]}; do
+    printf "$lecture"
+
+    SRC="$INDIR/$lecture"
+    TMP="$TMPDIR/$lecture"
+    DST="$OUTDIR/$lecture"
+    WEB="$WEBDIR/$lecture"
+
+    if [ ! -d "$SRC" ]; then
+        printf " \e[90m(absent)\e[0m"
+    elif [ ! -f "$SRC/$lecture.ipynb" ]; then
+        printf " \e[31m(MISSING FILE!)\e[0m"
+    elif [ "$IGNORE_TIMES" = false ] && [ "$SRC/$lecture.ipynb" -ot "$DST/$lecture.xml" ] && [ "$SRC/$lecture.ipynb" -ot "$WEB/$lecture.md" ]; then
+        printf " \e[32m(already done)\e[0m"
+    else
+        # We have to process these:
+        printf ": [ipynb] -> "
+
+        # STAGE 1: ipynb -> md
+        mkdir "$TMP" 2>/dev/null || true
+        rsync -av --exclude="**/$lecture.ipynb" --exclude="**/.*" $SRC/ $TMP
+
+        "$NB2MD_PATH" $SRC/$lecture.ipynb --output $TMP --flavor diderot
+        printf " [md] -> "
+
+        # STAGE 2: md -> diderot
+        mkdir "$DST" 2>/dev/null || true
+        # Move auxiliary files over
+        rsync -av --exclude="$lecture.md" --exclude=".*" $TMP/ $DST
+        # Run Diderot compiler
+        "$DC_PATH" "$TMP/$lecture.md" -o "$DST/$lecture.xml"
+
+        printf " [diderot]"
+
+        # STAGE 3: md -> notes-website
+        mkdir "$WEB" 2>/dev/null || true
+        # Copy the auxiliary files over:
+        rsync -av --exclude="**/$lecture.ipynb" --exclude="**/.*" $SRC/ $WEB
+        # Copy the main file as index.md:
+        "$NB2MD_PATH" $SRC/$lecture.ipynb --output $WEB/index.md --flavor gfm
+        # Zip and attach the auxiliary files
+        ( cd "$SRC"; GZIP=-n tar --sort=name --owner=root:0 --group=root:0 --mtime='UTC 2019-01-01' -zcvf "../../../$WEB/$lecture.tar.gz" . )
+
+        printf " [web]"
+    fi
+
+    printf "\n"
+done

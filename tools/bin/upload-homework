@@ -1,0 +1,8 @@
+#!/bin/bash
+
+HOMEWORK_ID="$1"
+DIR="$(pwd)/homework-diderot/$HOMEWORK_ID"
+
+tools/bin/diderot update_assignment "15388:f19" "$HOMEWORK_ID" --autograde-tar $DIR/autograde.tar --autograde-makefile $DIR/autograde-Makefile --handout $DIR/$HOMEWORK_ID.handout.tgz
+tools/bin/diderot submit_assignment "15388:f19" "$HOMEWORK_ID" $DIR/test-handin/$HOMEWORK_ID.ipynb
+tools/bin/diderot upload_chapter "15388:f19" book:homework --chapter_label "ch:::${HOMEWORK_ID}" --xml homework-diderot/${HOMEWORK_ID}/handout.xml

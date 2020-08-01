@@ -1,0 +1,117 @@
+#!/bin/bash
+shopt -s nullglob
+set -e
+
+INDIR=homework
+OUTDIR=homework-diderot
+WEBDIR=homework-website
+TMPDIR=homework-tmp
+
+if [ -d /build-tools/ ]; then
+    PATH_PREFIX="/build-tools"
+    DC_PATH="$PATH_PREFIX/dc"
+else
+    PATH_PREFIX="tools"
+
+    # Set up paths
+    UNAME_S="$(uname -s)"
+    if [[ $UNAME_S == Linux* ]]; then
+        DC_PLATFORM="ubuntu"
+    elif [[ $UNAME_S == Darwin* ]]; then
+        DC_PLATFORM="macos"
+    fi
+    DC_PATH="$PATH_PREFIX/guide/bin/$DC_PLATFORM/dc"
+fi
+
+SOL2HANDOUT_PATH="$PATH_PREFIX/solution2handout.py"
+NB2MD_PATH="$PATH_PREFIX/nb2md/nb2md.py"
+AUTOGRADER_PATH="$PATH_PREFIX/autograder"
+
+export GZIP=-n
+TAR_CMD="tar --sort=name --owner=root:0 --group=root:0 --mtime=1970-01-01"
+
+mkdir "$OUTDIR" 2>/dev/null || true
+mkdir "$WEBDIR" 2>/dev/null || true
+mkdir "$TMPDIR" 2>/dev/null || true
+
+# Commandline Options
+IGNORE_TIMES=false
+if [[ $1 == "help" ]]; then
+    echo "build-homework [help] [--force] [lecture [lecture [...]]]"
+    echo "Run without arguments to build all Diderot homeworks and autograders."
+    echo "use --force to ignore timestamps. (Currently timestamp checking is not implemented.)"
+    exit
+elif [[ $1 == "--force" ]]; then
+    IGNORE_TIMES=true
+    shift
+fi
+
+# Read list of lectures
+if [ $# == 0 ]; then
+    readarray HOMEWORKS < "./homeworks"
+else
+    HOMEWORKS=( "$@" )
+fi
+
+# Loop over all homework:
+for homework in ${HOMEWORKS[@]}; do
+    printf "$homework"
+
+    SRC="$INDIR/$homework"
+    DST="$OUTDIR/$homework"
+    TMP_HANDOUT="$TMPDIR/${homework}_handout"
+    TMP_GRADER="$TMPDIR/${homework}_grader"
+    TMP_BOOK="$TMPDIR/${homework}_book"
+
+    if [ ! -d "$SRC" ]; then
+        printf " \e[90m(absent)\e[0m"
+    elif [ ! -f "$SRC/handout/${homework}_solution.ipynb" ]; then
+        printf " \e[31m(MISSING FILE!)\e[0m"
+    # elif [ "$IGNORE_TIMES" = false ] && [ "$SRC/$lecture.ipynb" -ot "$DST/$lecture.xml" ] && [ "$SRC/$lecture.ipynb" -ot "$WEB/$lecture.md" ]; then
+    #    printf " \e[32m(already done)\e[0m"
+    else
+        rm -r "$DST" "$TMP_HANDOUT" "$TMP_GRADER" || true
+        # We have to process these:
+        printf ": [solution -> question] "
+        mkdir "$DST" 2>/dev/null || true
+        cp "$SRC/score.json" "$DST/score.json"
+        mkdir "$DST/test-handin/" 2>/dev/null || true
+
+        cp "$SRC/handout/${homework}_solution.ipynb" "$DST/test-handin/${homework}.ipynb"
+
+        mkdir "$TMP_HANDOUT" 2>/dev/null || true
+
+        rsync -av --delete --exclude="**/*_solution.ipynb" --exclude="**/.*" "$SRC/handout/" "$TMP_HANDOUT/"
+
+        "$SOL2HANDOUT_PATH" "$SRC/handout/${homework}_solution.ipynb" "$TMP_HANDOUT/$homework.ipynb"
+
+        # Create .tgz handout
+        mkdir "$DST" 2>/dev/null || true
+        ( cd "$TMP_HANDOUT"; $TAR_CMD -czv * ) > "$WEBDIR/$homework.handout.tgz"
+        cp "$WEBDIR/$homework.handout.tgz" "$DST/"
+
+        # Create and export xml output
+        mkdir "$TMP_BOOK" 2>/dev/null || true
+        "$NB2MD_PATH" "$TMP_HANDOUT/$homework.ipynb" --output "$TMP_BOOK/handout.md" --flavor diderot
+        "$DC_PATH" "$TMP_BOOK/handout.md" -o "$DST/handout.xml"
+
+        #
+        # Create and export grader
+        #
+        mkdir "$TMP_GRADER" 2>/dev/null || true
+
+        # Copy in all the files:
+        cp -r "$SRC/grading/" "$TMP_GRADER/tests"
+        cp "$SRC/grader-timeout" "$TMP_GRADER/grader-timeout" || true # Optionally copy grader timeout override
+        cp -r "$AUTOGRADER_PATH"/* "$TMP_GRADER/"
+        cp "$SRC/handout/requirements.txt" "$TMP_GRADER/handout-requirements.txt"
+
+        printf "$homework" > "$TMP_GRADER/homework-name"
+
+        ( cd "$TMP_GRADER"; $TAR_CMD -c --exclude Makefile --exclude Dockerfile * ) > "$DST/autograde.tar"
+        cp "$TMP_GRADER/Makefile" "$DST/autograde-Makefile"
+
+    fi
+
+    printf "\n"
+done

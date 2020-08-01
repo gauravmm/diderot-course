@@ -1,0 +1,5 @@
+#!/bin/bash
+
+CHAPTER="$1"
+
+./tools/diderot upload_chapter 15388:f19 book:lecture-slides --chapter_label "ch:::${CHAPTER}" --slides slides/${CHAPTER}/${CHAPTER}.pdf
