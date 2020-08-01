@@ -128,4 +128,4 @@ Here are the scripts:
   3. pulling these changes from your building repository,
   4. running the build and push process from there
 - The course name is currently hardcoded in every script in `tools/bin/upload-*`. This should be fixed.
-- Be careful when uploading book chapters. You can easily lose questions that students post.
+- Be careful when uploading book chapters. If you delete a previous book version, you will lose questions that students post.
