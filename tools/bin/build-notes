@@ -24,7 +24,7 @@ mkdir "$WEBDIR" 2>/dev/null || true
 # Commandline Options
 IGNORE_TIMES=false
 if [[ $1 == "help" ]]; then
-    echo "build-notes [--force] [help] [lecture [lecture [...]]]"
+    echo "build-notes [--force] [help] lecture [lecture [...]]"
     echo "Run without arguments to build Diderot XML notes from .ipynb files."
     echo "use --force to ignore timestamps."
     exit
@@ -35,7 +35,7 @@ fi
 
 # Read list of lectures
 if [ $# == 0 ]; then
-    readarray LECTURES < "./lectures"
+    echo "NO NOTES SPECIFIED"
 else
     LECTURES=( "$@" )
 fi
@@ -82,7 +82,7 @@ for lecture in ${LECTURES[@]}; do
         # Copy the main file as index.md:
         "$NB2MD_PATH" $SRC/$lecture.ipynb --output $WEB/index.md --flavor gfm
         # Zip and attach the auxiliary files
-        ( cd "$SRC"; GZIP=-n tar --sort=name --owner=root:0 --group=root:0 --mtime='UTC 2019-01-01' -zcvf "../../../$WEB/$lecture.tar.gz" . )
+        ( cd "$SRC"; GZIP=-n tar --sort=name --owner=root:0 --group=root:0 --mtime='UTC 2019-01-01' -zcvf "../../$WEB/$lecture.tar.gz" . )
 
         printf " [web]"
     fi
